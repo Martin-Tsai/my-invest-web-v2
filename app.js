@@ -89,7 +89,13 @@ document.addEventListener('DOMContentLoaded', () => {
     async function loadStock(ticker, name = null) {
         console.log('[InvestPro] Loading ticker:', ticker, 'Name:', name);
         suggestionsEl.style.display = 'none';
+        // Clear old data immediately
         $('ui-ticker').innerText = '載入中...';
+        $('ui-price').innerText = '-';
+        $('ui-change').innerText = '';
+        $('ui-score').innerText = '-';
+        $('ui-score-card').style.border = '1px solid #444';
+        
         $('searchBtn').disabled = true;
         $('searchBtn').innerText = '⏳';
 

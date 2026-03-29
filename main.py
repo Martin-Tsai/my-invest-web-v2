@@ -50,7 +50,7 @@ STOCK_NAMES = {
     # ── 日股 ──
     "8306.T": "三菱日聯金融", "7203.T": "豐田汽車", "6758.T": "索尼",
     "9984.T": "軟銀集團", "6861.T": "基恩斯", "7974.T": "任天堂",
-    "9432.T": "NTT", "6501.T": "日立", "8058.T": "三菱商事",
+    "9432.T": "NTT", "6501.T": "日立", "8058.T": "三菱商事", "7011.T": "三菱重工",
     # ── 港股 ──
     "0700.HK": "騰訊", "9988.HK": "阿里巴巴", "3690.HK": "美團",
     "1810.HK": "小米", "9618.HK": "京東", "0005.HK": "匯豐控股",
@@ -88,7 +88,7 @@ STOCK_ALIASES = {
     "國眾": "5410.TWO", "中鋼": "2002.TW", "玉山金": "2884.TW", "台積電": "2330.TW",
     # ── 日股 ──
     "任天堂": "7974.T", "NINTENDO": "7974.T",
-    "三菱商事": "8058.T", "三菱": "8058.T",
+    "三菱商事": "8058.T", "三菱": "8058.T", "三菱重工": "7011.T",
     "軟銀": "9984.T", "日本電信": "9432.T", "日立": "6501.T",
     "豐田": "7203.T", "索尼": "6758.T",
     # ── 美股、港股與其他通用別稱 (其餘由 Search API 動態處理) ──
@@ -135,7 +135,10 @@ def resolve_ticker(raw_input: str) -> str:
     if re.search(r'[\u4e00-\u9fff]', q):
         url = "https://query2.finance.yahoo.com/v1/finance/search"
         params = {"q": q, "quotesCount": 5}
-        headers = {"User-Agent": "Mozilla/5.0"}
+        headers = {
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+            "Accept": "application/json"
+        }
         try:
             resp = requests.get(url, params=params, headers=headers, timeout=3)
             data = resp.json()
