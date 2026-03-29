@@ -84,34 +84,11 @@ STOCK_ALIASES = {
     "0056": "0056.TW", "元大高股息": "0056.TW", "高股息": "0056.TW",
     "富邦台50": "006208.TW",
     "國泰永續高股息": "00878.TW",
-    # ── 美股（中文名＋常用別稱）──
-    "蘋果": "AAPL", "APPLE": "AAPL",
-    "微軟": "MSFT", "MICROSOFT": "MSFT",
-    "谷歌": "GOOGL", "GOOGLE": "GOOGL",
-    "亞馬遜": "AMZN", "AMAZON": "AMZN",
-    "輝達": "NVDA", "英偉達": "NVDA", "NVIDIA": "NVDA",
-    "特斯拉": "TSLA", "TESLA": "TSLA",
-    "博通": "AVGO", "超微": "AMD",
-    "英特爾": "INTC", "INTEL": "INTC",
-    "高通": "QCOM", "美光": "MU",
-    "好市多": "COST", "COSTCO": "COST",
-    # ── 跨市場 ADR (後綴詞設計) ──
+    # ── 美股、港股與其他通用別稱 (其餘由 Search API 動態處理) ──
     "台積電ADR": "TSM", "美股台積電": "TSM",
-    "任天堂": "7974.T",
     "任天堂ADR": "NTDOY", "美股任天堂": "NTDOY",
-    "索尼": "6758.T", "SONY": "6758.T",
     "索尼ADR": "SONY", "美股索尼": "SONY",
-    "豐田": "7203.T", "豐田汽車": "7203.T", "TOYOTA": "7203.T",
     "豐田ADR": "TM", "美股豐田": "TM",
-    "三菱日聯": "8306.T", "三菱日聯金融": "8306.T",
-    "軟銀": "9984.T", "軟銀集團": "9984.T", "SOFTBANK": "9984.T",
-    "基恩斯": "6861.T", "日立": "6501.T",
-    # ── 港股 ──
-    "騰訊": "0700.HK", "TENCENT": "0700.HK",
-    "美團": "3690.HK", "小米": "1810.HK", "XIAOMI": "1810.HK",
-    "匯豐": "0005.HK", "匯豐控股": "0005.HK",
-    "阿里巴巴": "BABA", "阿里": "BABA", "ALIBABA": "BABA",
-    "港股阿里": "9988.HK", "港股阿里巴巴": "9988.HK",
     "京東": "JD", "港股京東": "9618.HK",
     "蔚來": "NIO",
 }
@@ -145,7 +122,24 @@ def resolve_ticker(raw_input: str) -> str:
         if code in STOCK_ALIASES: return STOCK_ALIASES[code]
         return code
 
-    # Step 3: Pass through
+    # Step 3: CHINESE DYNAMIC SEARCH
+    # Detect if contains Chinese characters: [\u4e00-\u9fff]
+    if re.search(r'[\u4e00-\u9fff]', q):
+        url = "https://query2.finance.yahoo.com/v1/finance/search"
+        params = {"q": q, "quotesCount": 5}
+        headers = {"User-Agent": "Mozilla/5.0"}
+        try:
+            resp = requests.get(url, params=params, headers=headers, timeout=3)
+            data = resp.json()
+            quotes = data.get("quotes", [])
+            for res in quotes:
+                # Prefer EQUITY, ETF, or INDEX matches
+                if res.get("quoteType") in ["EQUITY", "ETF", "INDEX"]:
+                    return res.get("symbol", q_upper)
+        except Exception as e:
+            print(f"[Dynamic Alias] Error searching for {q}: {e}")
+
+    # Step 4: Pass through
     return q_upper
 
 # ───────── Technical Indicator Calculations ─────────
