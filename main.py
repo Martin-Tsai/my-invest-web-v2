@@ -1,6 +1,7 @@
 import os
 import re
 import json
+import time
 import yfinance as yf
 from fastapi import FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
@@ -34,6 +35,10 @@ def save_data(file_path, data):
 # Global instances (load once at start)
 STOCK_NAMES = load_data(NAMES_FILE, {})
 STOCK_ALIASES = load_data(ALIASES_FILE, {})
+
+# ── Simple In-Memory Cache ──
+STOCK_CACHE = {} # { ticker: { "data": ..., "expires": ... } }
+CACHE_TTL = 300  # 5 minutes
 
 app = FastAPI()
 
@@ -350,7 +355,42 @@ async def search_suggestions(q: str):
         return {"quotes": []}
 
 @app.get("/api/stock/{ticker}")
-async def get_stock_data(ticker: str, name: str = None):
+async def get_stock_data_api(ticker: str, name: str = Query(None)):
+    """
+    Unified stock data endpoint with 5-minute caching.
+    """
+    resolved = resolve_ticker(ticker)
+    if not resolved:
+        raise HTTPException(status_code=404, detail=f"Cannot resolve ticker: {ticker}")
+
+    # Check Cache
+    now = time.time()
+    if resolved in STOCK_CACHE:
+        cached = STOCK_CACHE[resolved]
+        if now < cached["expires"]:
+            print(f"[Cache Hit] {resolved}")
+            # Return cached data but override the name if provided
+            data = cached["data"].copy()
+            if name: data["stock_name"] = name
+            return data
+
+    try:
+        data = get_stock_data_logic(resolved, name)
+        # Update Cache
+        STOCK_CACHE[resolved] = {
+            "data": data,
+            "expires": now + CACHE_TTL
+        }
+        return data
+    except Exception as e:
+        # Check if it's a 429
+        error_str = str(e)
+        if "429" in error_str:
+            raise HTTPException(status_code=429, detail="Yahoo Finance rate limit exceeded")
+        raise HTTPException(status_code=500, detail=error_str)
+
+# Rename the original function to avoid conflict and keep original logic
+def get_stock_data_logic(ticker: str, name: str = None):
     try:
         # ── Ticker Normalization & Resolution ──
         resolved = resolve_ticker(ticker)

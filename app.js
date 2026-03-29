@@ -99,12 +99,22 @@ document.addEventListener('DOMContentLoaded', () => {
         $('searchBtn').disabled = true;
         $('searchBtn').innerText = '⏳';
 
+        // ── Cold Start / Timeout Timer ──
+        const coldStartTimer = setTimeout(() => {
+            $('ui-ticker').innerText = '(伺服器喚醒中...)';
+        }, 8000);
+
         try {
             let url = API_STOCK + encodeURIComponent(ticker);
             if (name) url += `?name=${encodeURIComponent(name)}`;
             
             const res = await fetch(url);
-            if (!res.ok) throw new Error('HTTP ' + res.status);
+            clearTimeout(coldStartTimer);
+            
+            if (!res.ok) {
+                if (res.status === 429) throw new Error('RATE_LIMIT');
+                throw new Error('HTTP ' + res.status);
+            }
             const data = await res.json();
             console.log('[InvestPro] Got', data.candles.length, 'candles');
 
@@ -197,7 +207,11 @@ document.addEventListener('DOMContentLoaded', () => {
         } catch (error) {
             console.error('[InvestPro] Error:', error);
             $('ui-ticker').innerText = '❌ 載入失敗';
-            $('ui-action').innerText = '載入失敗。請確認代碼是否正確。';
+            if (error.message === 'RATE_LIMIT') {
+                $('ui-action').innerText = '請求過於頻繁 (429)，Yahoo Finance 目前暫時限制存取，請於一分鐘後重試。';
+            } else {
+                $('ui-action').innerText = '載入失敗。伺服器目前繁忙或代碼無效，請稍後再試。';
+            }
         } finally {
             $('searchBtn').disabled = false;
             $('searchBtn').innerText = '查詢';
