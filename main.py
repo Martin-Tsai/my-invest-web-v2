@@ -349,7 +349,7 @@ async def search_suggestions(q: str):
         return {"quotes": []}
 
 @app.get("/api/stock/{ticker}")
-async def get_stock_data(ticker: str):
+async def get_stock_data(ticker: str, name: str = None):
     try:
         # ── Ticker Normalization & Falling Back (.TW -> .TWO) ──
         actual_ticker = ticker.upper()
@@ -380,6 +380,12 @@ async def get_stock_data(ticker: str):
             
         if df.empty:
             raise HTTPException(status_code=404, detail=f"No data found for {ticker}")
+        
+        # ── NAME RESOLUTION ──
+        # 1. Use passed name (frontend suggestion)
+        # 2. Use STOCK_NAMES (hardcoded Top 30)
+        # 3. Leave empty or use ticker
+        final_name = name if name else get_stock_name(actual_ticker)
         
         ticker = actual_ticker # Update ticker for the rest of processing
         df = df.dropna()
@@ -450,7 +456,7 @@ async def get_stock_data(ticker: str):
 
         return {
             "ticker": ticker,
-            "stock_name": get_stock_name(ticker),
+            "stock_name": final_name,
             "currency": currency,
             "latest_price": round(price, 2),
             "change": round(change, 2),

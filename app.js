@@ -86,27 +86,34 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // ── Main Data Loader ──
-    async function loadStock(ticker) {
-        console.log('[InvestPro] Loading ticker:', ticker);
+    async function loadStock(ticker, name = null) {
+        console.log('[InvestPro] Loading ticker:', ticker, 'Name:', name);
         suggestionsEl.style.display = 'none';
         $('ui-ticker').innerText = '載入中...';
         $('searchBtn').disabled = true;
         $('searchBtn').innerText = '⏳';
 
         try {
-            const res = await fetch(API_STOCK + encodeURIComponent(ticker));
+            let url = API_STOCK + encodeURIComponent(ticker);
+            if (name) url += `?name=${encodeURIComponent(name)}`;
+            
+            const res = await fetch(url);
             if (!res.ok) throw new Error('HTTP ' + res.status);
             const data = await res.json();
             console.log('[InvestPro] Got', data.candles.length, 'candles');
 
             // ── PRICE HEADER ──
-            const name = data.stock_name;
-            window.currentStockData = { ticker: data.ticker, stock_name: name };
+            const nameToDisplay = data.stock_name;
+            window.currentStockData = { ticker: data.ticker, stock_name: nameToDisplay };
             if (window.checkFavoriteStatus) window.checkFavoriteStatus(data.ticker);
 
-            $('ui-ticker').innerText = name
-                ? `${name} (${data.ticker.toUpperCase()})`
-                : data.ticker.toUpperCase();
+            // Consistent Format: Name (TICKER)
+            const tickerUpper = data.ticker.toUpperCase();
+            if (nameToDisplay && nameToDisplay !== tickerUpper) {
+                $('ui-ticker').innerText = `${nameToDisplay} (${tickerUpper})`;
+            } else {
+                $('ui-ticker').innerText = tickerUpper;
+            }
             $('ui-currency').innerText = data.currency || '';
             $('ui-price').innerText = data.latest_price;
             const isPos = data.change >= 0;
@@ -232,8 +239,9 @@ document.addEventListener('DOMContentLoaded', () => {
             document.querySelectorAll('.suggestion-item').forEach(item => {
                 item.addEventListener('click', () => {
                     const symbol = item.getAttribute('data-symbol');
+                    const name = item.querySelector('.suggestion-name').innerText;
                     searchInput.value = symbol;
-                    loadStock(symbol);
+                    loadStock(symbol, name);
                 });
             });
         } catch (err) {
@@ -251,14 +259,26 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     // ── Event Bindings ──
-    $('searchBtn').addEventListener('click', () => {
+    function handleSearch() {
         const val = searchInput.value.trim();
-        if (val) loadStock(val);
-    });
+        if (!val) return;
+
+        // If suggestions are visible, pick the first one as the "best match"
+        const firstSuggestion = suggestionsEl.querySelector('.suggestion-item');
+        if (suggestionsEl.style.display !== 'none' && firstSuggestion) {
+            const symbol = firstSuggestion.getAttribute('data-symbol');
+            const name = firstSuggestion.querySelector('.suggestion-name').innerText;
+            searchInput.value = symbol;
+            loadStock(symbol, name);
+        } else {
+            loadStock(val);
+        }
+    }
+
+    $('searchBtn').addEventListener('click', handleSearch);
     searchInput.addEventListener('keypress', e => {
         if (e.key === 'Enter') { 
-            const val = e.target.value.trim(); 
-            if (val) loadStock(val);
+            handleSearch();
             suggestionsEl.style.display = 'none';
         }
     });
@@ -357,5 +377,5 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // ── Initial Load ──
     updateChartSizes();
-    loadStock('2330.TW');
+    loadStock('2330.TW', '台積電');
 });
