@@ -259,11 +259,22 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     // ── Event Bindings ──
-    function handleSearch() {
+    async function handleSearch() {
         const val = searchInput.value.trim();
         if (!val) return;
 
-        // If suggestions are visible, pick the first one as the "best match"
+        // If it's a Chinese string and suggestions are not yet shown, wait a bit
+        const isChinese = /[\u4e00-\u9fff]/.test(val);
+        if (isChinese && suggestionsEl.style.display === 'none') {
+            console.log('[InvestPro] Waiting for suggestions...');
+            let attempts = 0;
+            while (attempts < 8 && suggestionsEl.style.display === 'none') {
+                await new Promise(r => setTimeout(r, 150));
+                attempts++;
+            }
+        }
+
+        // Now check if suggestions are visible, pick the first one as the "best match"
         const firstSuggestion = suggestionsEl.querySelector('.suggestion-item');
         if (suggestionsEl.style.display !== 'none' && firstSuggestion) {
             const symbol = firstSuggestion.getAttribute('data-symbol');
