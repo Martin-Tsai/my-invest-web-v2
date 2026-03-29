@@ -97,6 +97,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
             // ── PRICE HEADER ──
             const name = data.stock_name;
+            window.currentStockData = { ticker: data.ticker, stock_name: name };
+            if (window.checkFavoriteStatus) window.checkFavoriteStatus(data.ticker);
+
             $('ui-ticker').innerText = name
                 ? `${name} (${data.ticker.toUpperCase()})`
                 : data.ticker.toUpperCase();
@@ -225,6 +228,65 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
     });
+
+    // ── FAVORITES SYSTEM ──
+    let favorites = JSON.parse(localStorage.getItem('investpro_favorites')) || [];
+
+    window.checkFavoriteStatus = function(ticker) {
+        const btn = $('btn-favorite');
+        btn.style.display = 'inline-flex';
+        const isFav = favorites.some(f => f.ticker.toUpperCase() === ticker.toUpperCase());
+        if (isFav) {
+            btn.classList.add('active');
+            btn.innerHTML = '★';
+        } else {
+            btn.classList.remove('active');
+            btn.innerHTML = '☆';
+        }
+    };
+
+    function renderFavorites() {
+        const favContainer = $('ui-favorites-list');
+        if (favorites.length === 0) {
+            favContainer.style.display = 'none';
+            return;
+        }
+        favContainer.style.display = 'flex';
+        let html = `<span class="link-label">⭐ 最愛：</span>`;
+        // Show newest favorites first
+        [...favorites].reverse().forEach(f => {
+            html += `<button class="chip" data-ticker="${f.ticker}">${f.name}</button>`;
+        });
+        favContainer.innerHTML = html;
+        
+        // Rebind click events to new chips
+        favContainer.querySelectorAll('.chip').forEach(chip => {
+            chip.addEventListener('click', e => {
+                document.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
+                e.target.classList.add('active');
+                const ticker = e.target.getAttribute('data-ticker');
+                $('searchInput').value = ticker;
+                loadStock(ticker);
+            });
+        });
+    }
+
+    $('btn-favorite').addEventListener('click', () => {
+        const cur = window.currentStockData;
+        if (!cur) return;
+        const index = favorites.findIndex(f => f.ticker.toUpperCase() === cur.ticker.toUpperCase());
+        if (index > -1) {
+            favorites.splice(index, 1);
+        } else {
+            const shortName = (cur.stock_name && cur.stock_name !== 'null') ? cur.stock_name.split(' (')[0] : cur.ticker;
+            favorites.push({ ticker: cur.ticker, name: shortName });
+        }
+        localStorage.setItem('investpro_favorites', JSON.stringify(favorites));
+        window.checkFavoriteStatus(cur.ticker);
+        renderFavorites();
+    });
+
+    renderFavorites();
 
     // ── Initial Load ──
     updateChartSizes();

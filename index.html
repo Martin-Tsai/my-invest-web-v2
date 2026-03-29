@@ -18,12 +18,18 @@
                 <input type="text" id="searchInput" placeholder="代碼或名稱 (2330, 台積電, 任天堂ADR)" value="2330.TW">
                 <button id="searchBtn">查詢</button>
             </div>
-            <div class="quick-links">
+            <div class="quick-links" id="default-links">
+                <span class="link-label">🔥 熱門：</span>
                 <button class="chip active" data-ticker="2330.TW">台積電</button>
                 <button class="chip" data-ticker="0050.TW">0050</button>
                 <button class="chip" data-ticker="2317.TW">鴻海</button>
                 <button class="chip" data-ticker="AAPL">AAPL</button>
                 <button class="chip" data-ticker="NVDA">NVDA</button>
+            </div>
+            <!-- Favorites List -->
+            <div class="quick-links favorites-list" id="ui-favorites-list" style="display: none; margin-top: 8px;">
+                <span class="link-label">⭐ 最愛：</span>
+                <!-- dynamic -->
             </div>
         </header>
 
@@ -31,7 +37,10 @@
             <!-- Price Header -->
             <div class="asset-info">
                 <div>
-                    <h2 class="asset-name" id="ui-ticker">載入中...</h2>
+                    <h2 class="asset-name" style="align-items: center; gap: 8px;">
+                        <span id="ui-ticker">載入中...</span>
+                        <button id="btn-favorite" class="favorite-btn" title="加入/移除最愛" style="display: none;">☆</button>
+                    </h2>
                     <p class="asset-price">
                         <span id="ui-currency" class="currency-symbol"></span><span id="ui-price">---</span>
                         <span id="ui-change" class="change positive">---</span>

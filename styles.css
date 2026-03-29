@@ -41,7 +41,11 @@ body { background-color: var(--bg-color); color: var(--text-primary); line-heigh
 
 /* ── PRICE HEADER ── */
 .asset-info { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 20px; }
-.asset-name { font-size: 1.3rem; font-weight: 700; }
+.asset-name { font-size: 1.3rem; font-weight: 700; display: flex; }
+.favorite-btn { background: transparent; border: none; color: var(--text-secondary); font-size: 1.5rem; cursor: pointer; transition: var(--transition); line-height: 1; padding: 2px 6px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; }
+.favorite-btn:hover { color: #ffd700; transform: scale(1.15); background: rgba(255, 215, 0, 0.1); }
+.favorite-btn.active { color: #ffd700; }
+.link-label { color: var(--text-secondary); font-size: 0.85rem; font-weight: 600; padding: 6px 0; display: inline-flex; align-items: center; white-space: nowrap; }
 .asset-price { font-size: 1.8rem; font-weight: 700; margin-top: 4px; }
 .change.positive { color: var(--buy-color); font-size: 1rem; font-weight: 600; margin-left: 8px; }
 .change.negative { color: var(--sell-color); font-size: 1rem; font-weight: 600; margin-left: 8px; }
