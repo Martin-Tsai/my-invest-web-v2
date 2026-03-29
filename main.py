@@ -41,7 +41,6 @@ STOCK_NAMES = {
     "AAPL": "蘋果", "MSFT": "微軟", "GOOGL": "Google", "AMZN": "亞馬遜",
     "NVDA": "輝達", "META": "Meta", "TSLA": "特斯拉", "TSM": "台積電ADR",
     "AVGO": "博通", "AMD": "超微", "NFLX": "Netflix", "COST": "好市多",
-    "3483.TWO": "力致", "6488.TWO": "環球晶", "8069.TWO": "元太",
     "CRM": "Salesforce", "INTC": "英特爾", "QCOM": "高通",
     "MU": "美光", "BABA": "阿里巴巴", "JD": "京東", "NIO": "蔚來",
     "PLTR": "Palantir", "NTDOY": "任天堂ADR", "SONY": "索尼ADR",
@@ -82,9 +81,6 @@ STOCK_ALIASES = {
     # ── 台股 ETF ──
     "0050": "0050.TW", "元大台灣50": "0050.TW", "台灣50": "0050.TW",
     "0056": "0056.TW", "元大高股息": "0056.TW", "高股息": "0056.TW",
-    "力致": "3483.TWO", "3483": "3483.TWO",
-    "環球晶": "6488.TWO", "6488": "6488.TWO",
-    "元太": "8069.TWO", "8069": "8069.TWO",
     "富邦台50": "006208.TW",
     "國泰永續高股息": "00878.TW",
     # ── 美股（中文名＋常用別稱）──
@@ -127,28 +123,28 @@ def resolve_ticker(raw_input: str) -> str:
     """
     Smart ticker resolution:
     1. Strip whitespace
-    2. Check alias dict (case-insensitive for English, exact for Chinese)
-    3. If pure digits → append .TW  (Taiwan stock)
-    4. Otherwise → pass through as-is (assume raw ticker)
+    2. Check exact/case-insensitive alias match
+    3. Look for 4-6 digit codes inside the string (e.g. "力致3483" -> "3483")
+    4. If digits found -> Use alias or append .TW
+    5. Fallback: pass through
     """
+    import re
     q = raw_input.strip()
-    if not q:
-        return q
+    if not q: return q
 
-    # Step 1: Exact match in aliases (handles Chinese + "任天堂ADR" etc.)
-    if q in STOCK_ALIASES:
-        return STOCK_ALIASES[q]
-
-    # Step 2: Case-insensitive match (handles "apple", "NVIDIA", "tsmc")
+    # Step 1: Exact / Case-insensitive Alias
+    if q in STOCK_ALIASES: return STOCK_ALIASES[q]
     q_upper = q.upper()
-    if q_upper in STOCK_ALIASES:
-        return STOCK_ALIASES[q_upper]
+    if q_upper in STOCK_ALIASES: return STOCK_ALIASES[q_upper]
 
-    # Step 3: Pure digits → Taiwan stock
-    if q_upper.isdigit():
-        return q_upper + ".TW"
+    # Step 2: Extract numeric code (4-6 digits)
+    match = re.search(r'(\d{4,6})', q)
+    if match:
+        code = match.group(1)
+        if code in STOCK_ALIASES: return STOCK_ALIASES[code]
+        return code
 
-    # Step 4: Pass through as raw ticker
+    # Step 3: Pass through
     return q_upper
 
 # ───────── Technical Indicator Calculations ─────────
@@ -334,10 +330,37 @@ async def search_stock(q: str):
 @app.get("/api/stock/{ticker}")
 async def get_stock_data(ticker: str):
     try:
-        stock = yf.Ticker(ticker)
-        df = stock.history(period="6mo")
+        # ── Ticker Normalization & Falling Back (.TW -> .TWO) ──
+        actual_ticker = ticker.upper()
+        df = pd.DataFrame()
+        
+        # If it's a 4-6 digit code, or a code that ends with .TW
+        is_tw_numeric = actual_ticker.isdigit() or (len(actual_ticker) > 3 and actual_ticker[:-3].isdigit() and actual_ticker.endswith(".TW"))
+        
+        if is_tw_numeric:
+            base_code = actual_ticker[:-3] if actual_ticker.endswith(".TW") else actual_ticker
+            # Step 1: Try .TW (Listed)
+            primary = f"{base_code}.TW"
+            stock = yf.Ticker(primary)
+            df = stock.history(period="6mo")
+            
+            # Step 2: Fallback to .TWO (OTC) if .TW returns nothing
+            if df.empty:
+                secondary = f"{base_code}.TWO"
+                stock = yf.Ticker(secondary)
+                df = stock.history(period="6mo")
+                actual_ticker = secondary if not df.empty else primary
+            else:
+                actual_ticker = primary
+        else:
+            # Regular ticker (US, HK, JP or already suffixed)
+            stock = yf.Ticker(actual_ticker)
+            df = stock.history(period="6mo")
+            
         if df.empty:
-            raise HTTPException(status_code=404, detail="No data found for this ticker.")
+            raise HTTPException(status_code=404, detail=f"No data found for {ticker}")
+        
+        ticker = actual_ticker # Update ticker for the rest of processing
         df = df.dropna()
 
         # Calculate all indicators
