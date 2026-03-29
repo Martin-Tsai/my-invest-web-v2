@@ -31,7 +31,7 @@ document.addEventListener('DOMContentLoaded', () => {
         grid: { vertLines: { color: '#30363d' }, horzLines: { color: '#30363d' } },
         crosshair: { mode: LightweightCharts.CrosshairMode.Normal },
         rightPriceScale: { borderColor: '#30363d' },
-        timeScale: { borderColor: '#30363d', timeVisible: false },
+        timeScale: { borderColor: '#30363d', timeVisible: false, rightOffset: 12 },
     };
 
     let mainChartObj = LightweightCharts.createChart(document.getElementById('mainChart'), chartOpts);

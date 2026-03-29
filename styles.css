@@ -140,20 +140,23 @@ body { background-color: var(--bg-color); color: var(--text-primary); line-heigh
     border-radius: 50%;
     background-color: transparent;
     color: var(--text-secondary);
-    font-size: 11px;
+    font-size: 13px;
     font-weight: 700;
+    font-family: "Times New Roman", Times, serif;
     cursor: help;
     border: 1.5px solid var(--text-secondary);
     position: relative;
     font-style: italic;
+    padding-right: 2px; /* compensate for italic lean for perfect centering */
     margin-left: 8px;
     transition: var(--transition);
+    line-height: 1;
 }
 
 .info-icon:hover, .info-icon:active {
     color: var(--text-primary);
     border-color: var(--text-primary);
-    background-color: var(--card-bg-light);
+    background-color: var(--border-color);
 }
 
 .info-icon:hover::after, .info-icon:active::after {
@@ -162,19 +165,20 @@ body { background-color: var(--bg-color); color: var(--text-primary); line-heigh
     bottom: calc(100% + 10px);
     left: 50%;
     transform: translateX(-50%);
-    background-color: var(--card-bg-light);
+    background-color: #21262d; /* solid opaque background */
     border: 1px solid var(--border-color);
     color: var(--text-primary);
     padding: 10px 14px;
     border-radius: 8px;
     font-size: 13px;
     font-weight: 400;
+    font-family: 'Inter', sans-serif;
+    font-style: normal;
     white-space: normal;
     width: max-content;
     max-width: 250px;
-    box-shadow: 0 4px 16px rgba(0,0,0,0.4);
+    box-shadow: 0 4px 16px rgba(0,0,0,0.8);
     z-index: 1000;
-    font-style: normal;
     pointer-events: none;
     line-height: 1.5;
     text-align: left;
@@ -188,7 +192,7 @@ body { background-color: var(--bg-color); color: var(--text-primary); line-heigh
     transform: translateX(-50%);
     border-width: 8px;
     border-style: solid;
-    border-color: var(--border-color) transparent transparent transparent;
+    border-color: #21262d transparent transparent transparent;
     z-index: 1000;
     pointer-events: none;
 }
