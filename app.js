@@ -50,8 +50,11 @@ document.addEventListener('DOMContentLoaded', () => {
     console.log('[InvestPro] Charts initialized.');
 
     // ── DOM references ──
-    const API_SEARCH = '/api/search?q=';
+    const API_STOCK = '/api/stock/';
+    const API_SUGGEST = '/api/search?q=';
     const $ = id => document.getElementById(id);
+    const suggestionsEl = $('searchSuggestions');
+    const searchInput = $('searchInput');
 
     // ── Indicator Grid Builder ──
     function buildIndicatorGrid(grid) {
@@ -83,14 +86,15 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // ── Main Data Loader ──
-    async function loadStock(rawInput) {
-        console.log('[InvestPro] Searching:', rawInput);
+    async function loadStock(ticker) {
+        console.log('[InvestPro] Loading ticker:', ticker);
+        suggestionsEl.style.display = 'none';
         $('ui-ticker').innerText = '載入中...';
         $('searchBtn').disabled = true;
         $('searchBtn').innerText = '⏳';
 
         try {
-            const res = await fetch(API_SEARCH + encodeURIComponent(rawInput));
+            const res = await fetch(API_STOCK + encodeURIComponent(ticker));
             if (!res.ok) throw new Error('HTTP ' + res.status);
             const data = await res.json();
             console.log('[InvestPro] Got', data.candles.length, 'candles');
@@ -180,20 +184,83 @@ document.addEventListener('DOMContentLoaded', () => {
         } catch (error) {
             console.error('[InvestPro] Error:', error);
             $('ui-ticker').innerText = '❌ 載入失敗';
-            $('ui-action').innerText = '找不到「' + rawInput + '」的資料。可輸入代碼(2330)、中文(台積電)或ADR名稱(任天堂ADR)。';
+            $('ui-action').innerText = '載入失敗。請確認代碼是否正確。';
         } finally {
             $('searchBtn').disabled = false;
             $('searchBtn').innerText = '查詢';
         }
     }
 
+    // ── Autocomplete Logic ──
+    function debounce(func, timeout = 300) {
+        let timer;
+        return (...args) => {
+            clearTimeout(timer);
+            timer = setTimeout(() => { func.apply(this, args); }, timeout);
+        };
+    }
+
+    const fetchSuggestions = debounce(async (query) => {
+        if (query.length < 1) {
+            suggestionsEl.style.display = 'none';
+            return;
+        }
+
+        try {
+            const res = await fetch(API_SUGGEST + encodeURIComponent(query));
+            const data = await res.json();
+            const quotes = data.quotes || [];
+
+            if (quotes.length === 0) {
+                suggestionsEl.style.display = 'none';
+                return;
+            }
+
+            suggestionsEl.innerHTML = quotes.map(q => `
+                <div class="suggestion-item" data-symbol="${q.symbol}">
+                    <div class="suggestion-header">
+                        <span class="suggestion-symbol">${q.symbol}</span>
+                        <span class="suggestion-exch">${q.exchDisp}</span>
+                    </div>
+                    <div class="suggestion-name">${q.name}</div>
+                </div>
+            `).join('');
+
+            suggestionsEl.style.display = 'block';
+
+            // Click listener for items
+            document.querySelectorAll('.suggestion-item').forEach(item => {
+                item.addEventListener('click', () => {
+                    const symbol = item.getAttribute('data-symbol');
+                    searchInput.value = symbol;
+                    loadStock(symbol);
+                });
+            });
+        } catch (err) {
+            console.error('[InvestPro] Suggestion error:', err);
+        }
+    });
+
+    searchInput.addEventListener('input', e => fetchSuggestions(e.target.value.trim()));
+
+    // Close suggestions on outside click
+    document.addEventListener('click', (e) => {
+        if (!suggestionsEl.contains(e.target) && e.target !== searchInput) {
+            suggestionsEl.style.display = 'none';
+        }
+    });
+
     // ── Event Bindings ──
     $('searchBtn').addEventListener('click', () => {
-        const val = $('searchInput').value.trim();
+        const val = searchInput.value.trim();
         if (val) loadStock(val);
     });
-    $('searchInput').addEventListener('keypress', e => {
-        if (e.key === 'Enter') { const val = e.target.value.trim(); if (val) loadStock(val); }
+    searchInput.addEventListener('keypress', e => {
+        if (e.key === 'Enter') { 
+            const val = e.target.value.trim(); 
+            if (val) loadStock(val);
+            suggestionsEl.style.display = 'none';
+        }
     });
     document.querySelectorAll('.chip').forEach(chip => {
         chip.addEventListener('click', e => {

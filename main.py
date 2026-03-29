@@ -6,6 +6,7 @@ import yfinance as yf
 import pandas as pd
 import numpy as np
 import os
+import requests
 
 app = FastAPI()
 
@@ -322,10 +323,36 @@ def build_strategy(price, ma5, ma20, ma60, rsi, k, d, support, resistance, granv
 # ───────── API Endpoint ─────────
 
 @app.get("/api/search")
-async def search_stock(q: str):
-    """Smart search: accepts Chinese names, aliases, or raw tickers."""
-    ticker = resolve_ticker(q)
-    return await get_stock_data(ticker)
+async def search_suggestions(q: str):
+    """Autocomplete: returns suggestions from Yahoo Finance search API."""
+    if not q: return {"quotes": []}
+    
+    url = f"https://query2.finance.yahoo.com/v1/finance/search?q={q}&quotesCount=10"
+    headers = {
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36"
+    }
+    
+    try:
+        # Note: In production, consider using httpx (async) but requests is already in requirements.
+        resp = requests.get(url, headers=headers, timeout=5)
+        resp.raise_for_status()
+        data = resp.json()
+        
+        # Filter and format: [Symbol] Name (Exchange)
+        results = []
+        for q in data.get("quotes", []):
+            if q.get("quoteType") in ["EQUITY", "ETF", "INDEX"]:
+                results.append({
+                    "symbol": q.get("symbol"),
+                    "name": q.get("shortname") or q.get("longname") or "",
+                    "exchDisp": q.get("exchDisp") or q.get("exchange") or "",
+                })
+        return {"quotes": results}
+        
+    except Exception as e:
+        # Fallback or empty on error to avoid breaking the UI
+        print(f"[Search Engine] Error: {e}")
+        return {"quotes": []}
 
 @app.get("/api/stock/{ticker}")
 async def get_stock_data(ticker: str):

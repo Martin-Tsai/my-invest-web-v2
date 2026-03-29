@@ -22,9 +22,12 @@
         <header class="header">
             <h1 class="logo">Invest<span class="highlight">Pro</span></h1>
             <div class="search-container">
-                <span class="search-icon-css">🔍</span>
-                <input type="text" id="searchInput" placeholder="代碼或名稱 (2330, 台積電, 任天堂ADR)" value="2330.TW">
-                <button id="searchBtn">查詢</button>
+                <div class="search-input-group">
+                    <span class="search-icon-css">🔍</span>
+                    <input type="text" id="searchInput" placeholder="搜尋代碼或名稱 (例如：2330, 台積電, AAPL)" autocomplete="off">
+                    <button id="searchBtn">查詢</button>
+                    <div id="searchSuggestions" class="suggestions-dropdown"></div>
+                </div>
             </div>
             <div class="quick-links" id="default-links">
                 <span class="link-label">🔥 熱門：</span>
