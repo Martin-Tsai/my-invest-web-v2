@@ -1,0 +1,131 @@
+/* ══════════ CSS DESIGN SYSTEM ══════════ */
+:root {
+    --bg-color: #0d1117;
+    --card-bg: #161b22;
+    --text-primary: #f0f6fc;
+    --text-secondary: #8b949e;
+    --buy-color: #00ff88;
+    --buy-bg: rgba(0, 255, 136, 0.08);
+    --sell-color: #ff3366;
+    --sell-bg: rgba(255, 51, 102, 0.08);
+    --warn-color: #f0a030;
+    --warn-bg: rgba(240, 160, 48, 0.08);
+    --border-color: #30363d;
+    --accent: #58a6ff;
+    --transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; }
+
+body { background-color: var(--bg-color); color: var(--text-primary); line-height: 1.5; -webkit-font-smoothing: antialiased; }
+
+.app-container { max-width: 520px; margin: 0 auto; min-height: 100vh; border-right: 1px solid var(--border-color); border-left: 1px solid var(--border-color); background-color: var(--bg-color); padding-bottom: 60px; }
+
+/* ── HEADER ── */
+.header { padding: 20px 16px; background: rgba(13,17,23,0.8); backdrop-filter: blur(10px); position: sticky; top: 0; z-index: 100; border-bottom: 1px solid var(--border-color); }
+.logo { font-size: 1.5rem; font-weight: 800; margin-bottom: 16px; }
+.logo .highlight { color: var(--accent); }
+.search-container { display: flex; gap: 8px; margin-bottom: 16px; position: relative; }
+.search-icon-css { position: absolute; left: 12px; top: 9px; font-size: 1rem; }
+#searchInput { flex: 1; background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 8px; padding: 10px 10px 10px 40px; color: var(--text-primary); font-size: 1rem; transition: var(--transition); }
+#searchInput:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 2px rgba(88,166,255,0.2); }
+#searchBtn { background: var(--accent); color: #fff; border: none; border-radius: 8px; padding: 0 16px; font-weight: 600; cursor: pointer; transition: var(--transition); }
+#searchBtn:active { transform: scale(0.95); }
+.quick-links { display: flex; gap: 8px; overflow-x: auto; scrollbar-width: none; }
+.quick-links::-webkit-scrollbar { display: none; }
+.chip { background: var(--card-bg); border: 1px solid var(--border-color); color: var(--text-secondary); padding: 6px 12px; border-radius: 20px; font-size: 0.85rem; cursor: pointer; white-space: nowrap; transition: var(--transition); }
+.chip.active, .chip:active { background: var(--accent); color: white; border-color: var(--accent); }
+
+/* ── DASHBOARD ── */
+.dashboard { padding: 16px; }
+
+/* ── PRICE HEADER ── */
+.asset-info { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 20px; }
+.asset-name { font-size: 1.3rem; font-weight: 700; }
+.asset-price { font-size: 1.8rem; font-weight: 700; margin-top: 4px; }
+.change.positive { color: var(--buy-color); font-size: 1rem; font-weight: 600; margin-left: 8px; }
+.change.negative { color: var(--sell-color); font-size: 1rem; font-weight: 600; margin-left: 8px; }
+
+.composite-score-box { display: flex; flex-direction: column; align-items: center; background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 12px; padding: 8px 16px; min-width: 80px; }
+.score-label { font-size: 0.7rem; color: var(--text-secondary); font-weight: 600; }
+.score-value { font-size: 1.8rem; font-weight: 800; }
+
+/* ── SECTION TITLES ── */
+.section-title { font-size: 1rem; font-weight: 700; color: var(--text-secondary); margin: 20px 0 12px; letter-spacing: 0.5px; }
+
+/* ── GRANVILLE BANNER ── */
+.granville-banner { display: flex; justify-content: space-between; align-items: center; background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 12px; padding: 16px; margin-bottom: 16px; position: relative; overflow: hidden; }
+.granville-banner::before { content: ''; position: absolute; top: 0; left: 0; width: 4px; height: 100%; }
+.granville-banner.buy::before { background: var(--buy-color); }
+.granville-banner.sell::before { background: var(--sell-color); }
+.granville-left { display: flex; align-items: center; gap: 12px; }
+.granville-code { font-size: 1.6rem; font-weight: 800; padding: 4px 12px; border-radius: 6px; }
+.granville-banner.buy .granville-code { background: var(--buy-bg); color: var(--buy-color); border: 1px solid rgba(0,255,136,0.3); }
+.granville-banner.sell .granville-code { background: var(--sell-bg); color: var(--sell-color); border: 1px solid rgba(255,51,102,0.3); }
+.granville-label { font-size: 1.1rem; font-weight: 600; }
+.granville-right { text-align: right; }
+.granville-state-label { font-size: 0.75rem; color: var(--text-secondary); display: block; }
+.granville-state { font-size: 1.1rem; font-weight: 700; }
+
+/* ── STRATEGY CARDS ── */
+.strategy-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 16px; }
+.strategy-card { background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 12px; padding: 14px; transition: var(--transition); }
+.strategy-card:hover { border-color: var(--accent); transform: translateY(-2px); }
+.card-full { grid-column: 1 / -1; }
+.strategy-card-header { display: flex; align-items: center; gap: 6px; font-size: 0.8rem; color: var(--text-secondary); font-weight: 600; margin-bottom: 8px; }
+.strategy-icon { font-size: 1rem; }
+.strategy-card-body { font-size: 0.95rem; font-weight: 600; line-height: 1.6; color: var(--text-primary); }
+
+/* ── SUPPORT / RESISTANCE BAR ── */
+.sr-bar { display: flex; align-items: stretch; gap: 0; margin-bottom: 16px; border-radius: 12px; overflow: hidden; border: 1px solid var(--border-color); }
+.sr-item { flex: 1; padding: 12px 14px; background: var(--card-bg); }
+.sr-item.support { border-right: 1px solid var(--border-color); }
+.sr-label { font-size: 0.75rem; color: var(--text-secondary); display: block; margin-bottom: 4px; }
+.sr-value { font-size: 1.3rem; font-weight: 700; display: block; }
+.sr-item.support .sr-value { color: var(--buy-color); }
+.sr-item.resistance .sr-value { color: var(--sell-color); }
+.sr-dist { font-size: 0.75rem; color: var(--text-secondary); }
+.sr-divider { display: flex; align-items: center; justify-content: center; background: var(--card-bg); padding: 0 12px; border-left: 1px solid var(--border-color); border-right: 1px solid var(--border-color); }
+.sr-price { font-size: 1rem; font-weight: 700; color: var(--accent); white-space: nowrap; }
+
+/* ── RISK & REASONS ── */
+.risk-section { background: var(--sell-bg); border: 1px solid rgba(255,51,102,0.2); border-radius: 12px; padding: 14px; margin-bottom: 16px; }
+.risk-section .section-title { margin-top: 0; color: var(--sell-color); }
+.risk-list { list-style: none; padding: 0; }
+.risk-list li { padding: 6px 0; font-size: 0.9rem; color: var(--sell-color); font-weight: 500; border-bottom: 1px solid rgba(255,51,102,0.1); }
+.risk-list li:last-child { border-bottom: none; }
+.risk-list li::before { content: '⚡ '; }
+.risk-safe { background: var(--buy-bg) !important; border-color: rgba(0,255,136,0.2) !important; }
+.risk-safe .section-title { color: var(--buy-color) !important; }
+.risk-safe .risk-list li { color: var(--buy-color) !important; }
+.risk-safe .risk-list li::before { content: '✅ '; }
+
+.reasons-section { background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 12px; padding: 14px; margin-bottom: 20px; }
+.reasons-section .section-title { margin-top: 0; }
+.reasons-list { list-style: none; padding: 0; }
+.reasons-list li { padding: 6px 0; font-size: 0.9rem; color: var(--text-primary); border-bottom: 1px solid var(--border-color); }
+.reasons-list li:last-child { border-bottom: none; }
+.reasons-list li::before { content: '• '; color: var(--accent); font-weight: 700; }
+
+/* ── INDICATOR GRID ── */
+.indicator-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 20px; }
+.ind-cell { background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 10px; padding: 10px 12px; text-align: center; transition: var(--transition); }
+.ind-cell:hover { border-color: var(--accent); }
+.ind-cell-label { font-size: 0.7rem; color: var(--text-secondary); font-weight: 600; display: block; margin-bottom: 4px; }
+.ind-cell-value { font-size: 1.1rem; font-weight: 700; }
+
+/* ── TABS ── */
+.tabs-container { border-bottom: 1px solid var(--border-color); margin-bottom: 16px; }
+.tabs { list-style: none; display: flex; gap: 20px; }
+.tab { padding: 10px 4px; font-size: 1rem; color: var(--text-secondary); font-weight: 600; cursor: pointer; position: relative; transition: var(--transition); }
+.tab.active { color: var(--text-primary); }
+.tab.active::after { content: ''; position: absolute; bottom: -1px; left: 0; width: 100%; height: 3px; background-color: var(--accent); border-radius: 3px 3px 0 0; }
+
+/* ── CHARTS ── */
+.chart-wrapper { position: relative; }
+.tab-content { display: none; animation: fadeIn 0.4s ease; }
+.tab-content.active { display: block; }
+.chart-box { width: 100%; height: 350px; border-radius: 8px; background: var(--card-bg); overflow: hidden; position: relative; border: 1px solid var(--border-color); }
+.chart-box.indicator { height: 200px; margin-bottom: 16px; }
+
+@keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }

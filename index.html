@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>InvestPro — 智慧投資戰情平台</title>
+    <link rel="stylesheet" href="/static/styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lightweight-charts@3.8.0/dist/lightweight-charts.standalone.production.js"></script>
+</head>
+<body class="dark-mode">
+
+    <main class="app-container">
+        <header class="header">
+            <h1 class="logo">Invest<span class="highlight">Pro</span></h1>
+            <div class="search-container">
+                <span class="search-icon-css">🔍</span>
+                <input type="text" id="searchInput" placeholder="代碼或名稱 (2330, 台積電, 任天堂ADR)" value="2330.TW">
+                <button id="searchBtn">查詢</button>
+            </div>
+            <div class="quick-links">
+                <button class="chip active" data-ticker="2330.TW">台積電</button>
+                <button class="chip" data-ticker="0050.TW">0050</button>
+                <button class="chip" data-ticker="2317.TW">鴻海</button>
+                <button class="chip" data-ticker="AAPL">AAPL</button>
+                <button class="chip" data-ticker="NVDA">NVDA</button>
+            </div>
+        </header>
+
+        <section class="dashboard">
+            <!-- Price Header -->
+            <div class="asset-info">
+                <div>
+                    <h2 class="asset-name" id="ui-ticker">載入中...</h2>
+                    <p class="asset-price">
+                        <span id="ui-currency" class="currency-symbol"></span><span id="ui-price">---</span>
+                        <span id="ui-change" class="change positive">---</span>
+                    </p>
+                </div>
+                <div class="composite-score-box" id="ui-score-box">
+                    <span class="score-label">綜合分數</span>
+                    <span class="score-value" id="ui-composite-score">--</span>
+                </div>
+            </div>
+
+            <!-- ══════════ STRATEGY WAR ROOM ══════════ -->
+            <div class="section-title">🎯 策略戰情室</div>
+
+            <!-- Granville Signal Banner -->
+            <div class="granville-banner" id="ui-granville-banner">
+                <div class="granville-left">
+                    <span class="granville-code" id="ui-granville-code">--</span>
+                    <span class="granville-label" id="ui-granville-label">---</span>
+                </div>
+                <div class="granville-right">
+                    <span class="granville-state-label">現在狀態</span>
+                    <span class="granville-state" id="ui-overall-state">---</span>
+                </div>
+            </div>
+
+            <!-- Action Cards Grid -->
+            <div class="strategy-grid">
+                <div class="strategy-card" id="card-action">
+                    <div class="strategy-card-header">
+                        <span class="strategy-icon">🎬</span>
+                        <span>適合動作</span>
+                    </div>
+                    <p class="strategy-card-body" id="ui-action">---</p>
+                </div>
+                <div class="strategy-card" id="card-timing">
+                    <div class="strategy-card-header">
+                        <span class="strategy-icon">⏰</span>
+                        <span>進場時機</span>
+                    </div>
+                    <p class="strategy-card-body" id="ui-timing">---</p>
+                </div>
+                <div class="strategy-card card-full" id="card-holder">
+                    <div class="strategy-card-header">
+                        <span class="strategy-icon">🤝</span>
+                        <span>持有者動作</span>
+                    </div>
+                    <p class="strategy-card-body" id="ui-holder">---</p>
+                </div>
+            </div>
+
+            <!-- Support / Resistance Bar -->
+            <div class="sr-bar">
+                <div class="sr-item support">
+                    <span class="sr-label">📉 支撐位</span>
+                    <span class="sr-value" id="ui-support">---</span>
+                    <span class="sr-dist" id="ui-support-dist">---</span>
+                </div>
+                <div class="sr-divider">
+                    <span class="sr-price" id="ui-sr-price">---</span>
+                </div>
+                <div class="sr-item resistance">
+                    <span class="sr-label">📈 壓力位</span>
+                    <span class="sr-value" id="ui-resistance">---</span>
+                    <span class="sr-dist" id="ui-resistance-dist">---</span>
+                </div>
+            </div>
+
+            <!-- Risk Warnings -->
+            <div class="risk-section" id="ui-risk-section">
+                <div class="section-title">⚠️ 風險提醒</div>
+                <ul class="risk-list" id="ui-risks"></ul>
+            </div>
+
+            <!-- Judgment Basis -->
+            <div class="reasons-section">
+                <div class="section-title">📋 判斷依據</div>
+                <ul class="reasons-list" id="ui-reasons"></ul>
+            </div>
+
+            <!-- ══════════ INDICATOR GRID ══════════ -->
+            <div class="section-title">📊 技術指標總覽</div>
+            <div class="indicator-grid" id="ui-indicator-grid"></div>
+
+            <!-- ══════════ CHARTS ══════════ -->
+            <div class="tabs-container">
+                <ul class="tabs">
+                    <li class="tab active" data-tab="tab-main">主圖 (K線/MA)</li>
+                    <li class="tab" data-tab="tab-indicators">技術指標 (KD/RSI)</li>
+                </ul>
+            </div>
+            <div class="chart-wrapper">
+                <div id="tab-main" class="tab-content active">
+                    <div id="mainChart" class="chart-box"></div>
+                </div>
+                <div id="tab-indicators" class="tab-content">
+                    <div id="kdChart" class="chart-box indicator"></div>
+                    <div id="rsiChart" class="chart-box indicator"></div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <script src="/static/app.js"></script>
+</body>
+</html>
