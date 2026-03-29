@@ -86,6 +86,8 @@ STOCK_ALIASES = {
     "富邦台50": "006208.TW",
     "國泰永續高股息": "00878.TW",
     "國眾": "5410.TWO", "中鋼": "2002.TW", "玉山金": "2884.TW", "台積電": "2330.TW",
+    # ── 日股 ──
+    "任天堂": "7974.T", "NINTENDO": "7974.T",
     # ── 美股、港股與其他通用別稱 (其餘由 Search API 動態處理) ──
     "台積電ADR": "TSM", "美股台積電": "TSM",
     "任天堂ADR": "NTDOY", "美股任天堂": "NTDOY",
@@ -117,11 +119,13 @@ def resolve_ticker(raw_input: str) -> str:
     if q_upper in STOCK_ALIASES: return STOCK_ALIASES[q_upper]
 
     # Step 2: Extract numeric code (4-6 digits)
-    match = re.search(r'(\d{4,6})', q)
-    if match:
-        code = match.group(1)
-        if code in STOCK_ALIASES: return STOCK_ALIASES[code]
-        return code
+    # Skip if already has a dot (indicator of a handled suffix like .T, .HK, .TW)
+    if "." not in q:
+        match = re.search(r'(\d{4,6})', q)
+        if match:
+            code = match.group(1)
+            if code in STOCK_ALIASES: return STOCK_ALIASES[code]
+            return code
 
     # Step 3: CHINESE DYNAMIC SEARCH
     # Detect if contains Chinese characters: [\u4e00-\u9fff]
@@ -376,7 +380,13 @@ async def get_stock_data(ticker: str, name: str = None):
                 secondary = f"{base_code}.TWO"
                 stock = yf.Ticker(secondary)
                 df = stock.history(period="6mo")
-                actual_ticker = secondary if not df.empty else primary
+                # Step 3: Final Fallback to RAW numeric (e.g. 7974 JP)
+                if df.empty:
+                    actual_ticker = base_code
+                    stock = yf.Ticker(actual_ticker)
+                    df = stock.history(period="6mo")
+                else:
+                    actual_ticker = secondary
             else:
                 actual_ticker = primary
         else:
