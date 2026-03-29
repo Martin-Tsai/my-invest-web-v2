@@ -7,7 +7,7 @@
     },
     {
       "source": "/api/(.*)",
-      "destination": "https://YOUR_RENDER_APP_NAME.onrender.com/api/$1"
+      "destination": "https://investpro-api-2rr2.onrender.com/api/$1"
     }
   ],
   "headers": [
