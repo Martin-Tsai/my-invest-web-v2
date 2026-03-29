@@ -7,6 +7,7 @@ import pandas as pd
 import numpy as np
 import os
 import requests
+import re
 
 app = FastAPI()
 
@@ -84,6 +85,7 @@ STOCK_ALIASES = {
     "0056": "0056.TW", "元大高股息": "0056.TW", "高股息": "0056.TW",
     "富邦台50": "006208.TW",
     "國泰永續高股息": "00878.TW",
+    "國眾": "5410.TWO", "中鋼": "2002.TW", "玉山金": "2884.TW", "台積電": "2330.TW",
     # ── 美股、港股與其他通用別稱 (其餘由 Search API 動態處理) ──
     "台積電ADR": "TSM", "美股台積電": "TSM",
     "任天堂ADR": "NTDOY", "美股任天堂": "NTDOY",
@@ -106,7 +108,6 @@ def resolve_ticker(raw_input: str) -> str:
     4. If digits found -> Use alias or append .TW
     5. Fallback: pass through
     """
-    import re
     q = raw_input.strip()
     if not q: return q
 
@@ -135,9 +136,10 @@ def resolve_ticker(raw_input: str) -> str:
             for res in quotes:
                 # Prefer EQUITY, ETF, or INDEX matches
                 if res.get("quoteType") in ["EQUITY", "ETF", "INDEX"]:
-                    return res.get("symbol", q_upper)
+                    return res.get("symbol")
         except Exception as e:
             print(f"[Dynamic Alias] Error searching for {q}: {e}")
+        return None # Explicitly fail Chinese resolution instead of passing raw Chinese
 
     # Step 4: Pass through
     return q_upper
@@ -351,8 +353,12 @@ async def search_suggestions(q: str):
 @app.get("/api/stock/{ticker}")
 async def get_stock_data(ticker: str, name: str = None):
     try:
-        # ── Ticker Normalization & Falling Back (.TW -> .TWO) ──
-        actual_ticker = ticker.upper()
+        # ── Ticker Normalization & Resolution ──
+        resolved = resolve_ticker(ticker)
+        if not resolved or re.search(r'[\u4e00-\u9fff]', resolved):
+             raise HTTPException(status_code=404, detail=f"Invalid or unresolvable ticker: {ticker}")
+             
+        actual_ticker = resolved.upper()
         df = pd.DataFrame()
         
         # If it's a 4-6 digit code, or a code that ends with .TW
