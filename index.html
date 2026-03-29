@@ -38,13 +38,16 @@
                     </p>
                 </div>
                 <div class="composite-score-box" id="ui-score-box">
-                    <span class="score-label">綜合分數</span>
+                    <span class="score-label" style="display: flex; align-items: center; justify-content: center;">綜合分數<i class="info-icon" data-tooltip="滿分 100 分。整合技術面(均線、KD、RSI)、型態面風險等綜合量化評分。正數偏多，負數偏空。">i</i></span>
                     <span class="score-value" id="ui-composite-score">--</span>
                 </div>
             </div>
 
             <!-- ══════════ STRATEGY WAR ROOM ══════════ -->
-            <div class="section-title">🎯 策略戰情室</div>
+            <div class="section-title" style="display: flex; align-items: center;">
+                🎯 策略戰情室
+                <i class="info-icon" data-tooltip="依據葛蘭碧八大法則搭配 KD/RSI ，透過演算法產生的當前市況與買賣策略建議。此為歷史回測經驗法則，股市有風險，請獨立思考後再採取行動。">i</i>
+            </div>
 
             <!-- Granville Signal Banner -->
             <div class="granville-banner" id="ui-granville-banner">
@@ -102,7 +105,10 @@
 
             <!-- Risk Warnings -->
             <div class="risk-section" id="ui-risk-section">
-                <div class="section-title">⚠️ 風險提醒</div>
+                <div class="section-title" style="display: flex; align-items: center;">
+                    ⚠️ 風險提醒
+                    <i class="info-icon" data-tooltip="系統會掃描當前 K 線與指標是否出現高危險訊號（如：死亡交叉、跌破極限支撐等），綠色代表目前無明顯風險。">i</i>
+                </div>
                 <ul class="risk-list" id="ui-risks"></ul>
             </div>
 
@@ -113,7 +119,10 @@
             </div>
 
             <!-- ══════════ INDICATOR GRID ══════════ -->
-            <div class="section-title">📊 技術指標總覽</div>
+            <div class="section-title" style="display: flex; align-items: center;">
+                📊 技術指標總覽
+                <i class="info-icon" data-tooltip="展示各大關鍵均線 (MA)、籌碼動能與 KD/RSI 指標狀態。上方「綜合分數」與「戰情室建議」皆是基於此區塊的每日原始數值推導計算而得。">i</i>
+            </div>
             <div class="indicator-grid" id="ui-indicator-grid"></div>
 
             <!-- ══════════ CHARTS ══════════ -->
