@@ -1,13 +1,39 @@
-from fastapi import FastAPI, HTTPException
+import os
+import re
+import json
+import yfinance as yf
+from fastapi import FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
-import yfinance as yf
 import pandas as pd
 import numpy as np
-import os
 import requests
-import re
+
+# ── Dynamic Configuration Storage ──
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+DATA_DIR = os.path.join(BASE_DIR, "data")
+ALIASES_FILE = os.path.join(DATA_DIR, "aliases.json")
+NAMES_FILE = os.path.join(DATA_DIR, "names.json")
+
+def load_data(file_path, default_val):
+    if not os.path.exists(file_path):
+        return default_val
+    try:
+        with open(file_path, "r", encoding="utf-8") as f:
+            return json.load(f)
+    except Exception as e:
+        print(f"Error loading {file_path}: {e}")
+        return default_val
+
+def save_data(file_path, data):
+    os.makedirs(DATA_DIR, exist_ok=True)
+    with open(file_path, "w", encoding="utf-8") as f:
+        json.dump(data, f, ensure_ascii=False, indent=2)
+
+# Global instances (load once at start)
+STOCK_NAMES = load_data(NAMES_FILE, {})
+STOCK_ALIASES = load_data(ALIASES_FILE, {})
 
 app = FastAPI()
 
@@ -21,88 +47,51 @@ app.add_middleware(
 
 app.mount("/static", StaticFiles(directory=os.path.dirname(os.path.abspath(__file__))), name="static")
 
-# ───────── Zero-Latency Stock Name Dictionary ─────────
+# ── Alias Management API ──
+@app.get("/api/admin/aliases")
+def get_aliases():
+    return {
+        "aliases": STOCK_ALIASES,
+        "names": STOCK_NAMES
+    }
 
-STOCK_NAMES = {
-    # ── 台股 Top 30 ──
-    "2330.TW": "台積電", "2317.TW": "鴻海", "2454.TW": "聯發科",
-    "2308.TW": "台達電", "2881.TW": "富邦金", "2882.TW": "國泰金",
-    "2891.TW": "中信金", "2884.TW": "玉山金", "2886.TW": "兆豐金",
-    "2303.TW": "聯電", "2002.TW": "中鋼", "1301.TW": "台塑",
-    "1303.TW": "南亞", "2412.TW": "中華電", "3711.TW": "日月光投控",
-    "2382.TW": "廣達", "2357.TW": "華碩", "3008.TW": "大立光",
-    "2395.TW": "研華", "2207.TW": "和泰車", "1216.TW": "統一",
-    "2892.TW": "第一金", "2880.TW": "華南金", "5880.TW": "合庫金",
-    "2885.TW": "元大金", "2890.TW": "永豐金", "3045.TW": "台灣大",
-    "4904.TW": "遠傳", "1101.TW": "台泥", "2912.TW": "統一超",
-    # ── 台股 ETF ──
-    "0050.TW": "元大台灣50", "0056.TW": "元大高股息", "006208.TW": "富邦台50",
-    "00878.TW": "國泰永續高股息", "00919.TW": "群益台灣精選高息",
-    "00940.TW": "元大台灣價值高息", "00929.TW": "復華台灣科技優息",
-    # ── 美股 Top 20 ──
-    "AAPL": "蘋果", "MSFT": "微軟", "GOOGL": "Google", "AMZN": "亞馬遜",
-    "NVDA": "輝達", "META": "Meta", "TSLA": "特斯拉", "TSM": "台積電ADR",
-    "AVGO": "博通", "AMD": "超微", "NFLX": "Netflix", "COST": "好市多",
-    "CRM": "Salesforce", "INTC": "英特爾", "QCOM": "高通",
-    "MU": "美光", "BABA": "阿里巴巴", "JD": "京東", "NIO": "蔚來",
-    "PLTR": "Palantir", "NTDOY": "任天堂ADR", "SONY": "索尼ADR",
-    "TM": "豐田ADR",
-    # ── 日股 ──
-    "8306.T": "三菱日聯金融", "7203.T": "豐田汽車", "6758.T": "索尼",
-    "9984.T": "軟銀集團", "6861.T": "基恩斯", "7974.T": "任天堂",
-    "9432.T": "NTT", "6501.T": "日立", "8058.T": "三菱商事", "7011.T": "三菱重工",
-    # ── 港股 ──
-    "0700.HK": "騰訊", "9988.HK": "阿里巴巴", "3690.HK": "美團",
-    "1810.HK": "小米", "9618.HK": "京東", "0005.HK": "匯豐控股",
-}
+@app.post("/api/admin/aliases")
+async def update_alias(data: dict):
+    alias_key = data.get("alias")
+    ticker = data.get("ticker")
+    display_name = data.get("name")
+
+    if not alias_key or not ticker:
+        raise HTTPException(status_code=400, detail="Missing alias or ticker")
+
+    # Update global state
+    STOCK_ALIASES[alias_key] = ticker
+    if display_name:
+        STOCK_NAMES[ticker] = display_name
+
+    # Persist
+    save_data(ALIASES_FILE, STOCK_ALIASES)
+    save_data(NAMES_FILE, STOCK_NAMES)
+    
+    return {"status": "success"}
+
+@app.delete("/api/admin/aliases/{key}")
+def delete_alias(key: str):
+    if key in STOCK_ALIASES:
+        del STOCK_ALIASES[key]
+        save_data(ALIASES_FILE, STOCK_ALIASES)
+        return {"status": "deleted"}
+    raise HTTPException(status_code=404, detail="Alias not found")
+
 
 # ───────── Reverse Lookup Alias Dictionary ─────────
 # Maps Chinese names / aliases → ticker symbol
 # Supports: 多對一 (many-to-one), ADR variants, common abbreviations
 
-STOCK_ALIASES = {
-    # ── 台股 ──
-    "台積電": "2330.TW", "TSMC": "2330.TW",
-    "鴻海": "2317.TW", "富士康": "2317.TW",
-    "聯發科": "2454.TW", "MTK": "2454.TW",
-    "台達電": "2308.TW", "富邦金": "2881.TW",
-    "國泰金": "2882.TW", "中信金": "2891.TW",
-    "玉山金": "2884.TW", "兆豐金": "2886.TW",
-    "聯電": "2303.TW", "中鋼": "2002.TW",
-    "台塑": "1301.TW", "南亞": "1303.TW",
-    "中華電": "2412.TW", "中華電信": "2412.TW",
-    "日月光": "3711.TW", "日月光投控": "3711.TW",
-    "廣達": "2382.TW", "華碩": "2357.TW",
-    "大立光": "3008.TW", "研華": "2395.TW",
-    "和泰車": "2207.TW", "統一": "1216.TW",
-    "第一金": "2892.TW", "華南金": "2880.TW",
-    "合庫金": "5880.TW", "元大金": "2885.TW",
-    "永豐金": "2890.TW", "台灣大": "3045.TW",
-    "遠傳": "4904.TW", "台泥": "1101.TW",
-    "統一超": "2912.TW",
-    # ── 台股 ETF ──
-    "0050": "0050.TW", "元大台灣50": "0050.TW", "台灣50": "0050.TW",
-    "0056": "0056.TW", "元大高股息": "0056.TW", "高股息": "0056.TW",
-    "富邦台50": "006208.TW",
-    "國泰永續高股息": "00878.TW",
-    "國眾": "5410.TWO", "中鋼": "2002.TW", "玉山金": "2884.TW", "台積電": "2330.TW",
-    # ── 日股 ──
-    "任天堂": "7974.T", "NINTENDO": "7974.T",
-    "三菱商事": "8058.T", "三菱": "8058.T", "三菱重工": "7011.T",
-    "軟銀": "9984.T", "日本電信": "9432.T", "日立": "6501.T",
-    "豐田": "7203.T", "索尼": "6758.T",
-    # ── 美股、港股與其他通用別稱 (其餘由 Search API 動態處理) ──
-    "台積電ADR": "TSM", "美股台積電": "TSM",
-    "任天堂ADR": "NTDOY", "美股任天堂": "NTDOY",
-    "索尼ADR": "SONY", "美股索尼": "SONY",
-    "豐田ADR": "TM", "美股豐田": "TM",
-    "京東": "JD", "港股京東": "9618.HK",
-    "蔚來": "NIO",
-}
-
 def get_stock_name(ticker: str) -> str:
     """Zero-latency name lookup. Returns Chinese name or empty string."""
-    return STOCK_NAMES.get(ticker.upper(), STOCK_NAMES.get(ticker, ""))
+    t_upper = ticker.upper()
+    return STOCK_NAMES.get(t_upper, STOCK_NAMES.get(ticker, ""))
 
 def resolve_ticker(raw_input: str) -> str:
     """

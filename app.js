@@ -392,6 +392,92 @@ document.addEventListener('DOMContentLoaded', () => {
 
     renderFavorites();
 
+    // ── Alias Management Logic ──
+    const adminModal = $('adminModal');
+    const adminBtn = $('adminBtn');
+    const closeAdminBtn = document.querySelector('.close-modal');
+    const aliasTableBody = $('aliasTableBody');
+
+    adminBtn.onclick = () => {
+        adminModal.classList.add('active');
+        refreshAliasTable();
+    };
+
+    closeAdminBtn.onclick = () => {
+        adminModal.classList.remove('active');
+    };
+
+    window.onclick = (event) => {
+        if (event.target === adminModal) {
+            adminModal.classList.remove('active');
+        }
+    };
+
+    async function refreshAliasTable() {
+        try {
+            const res = await fetch('/api/admin/aliases');
+            const data = await res.json();
+            renderAliasTable(data.aliases, data.names);
+        } catch (e) {
+            console.error('[InvestPro] Error fetching aliases:', e);
+        }
+    }
+
+    function renderAliasTable(aliases, names) {
+        aliasTableBody.innerHTML = '';
+        Object.keys(aliases).forEach(key => {
+            const ticker = aliases[key];
+            const name = names[ticker] || '-';
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td><strong>${key}</strong></td>
+                <td>${ticker}</td>
+                <td>${name}</td>
+                <td><button class="btn-delete" data-key="${key}">刪除</button></td>
+            `;
+            aliasTableBody.appendChild(tr);
+        });
+
+        // Delete handlers
+        document.querySelectorAll('.btn-delete').forEach(btn => {
+            btn.onclick = async () => {
+                const key = btn.getAttribute('data-key');
+                if (confirm(`確定要刪除別名「${key}」嗎？`)) {
+                    await fetch(`/api/admin/aliases/${encodeURIComponent(key)}`, { method: 'DELETE' });
+                    refreshAliasTable();
+                }
+            };
+        });
+    }
+
+    $('saveAliasBtn').onclick = async () => {
+        const alias = $('newAlias').value.trim();
+        const ticker = $('newTicker').value.trim();
+        const name = $('newName').value.trim();
+
+        if (!alias || !ticker) {
+            alert('「別名」與「代碼」為必填項目！');
+            return;
+        }
+
+        try {
+            const res = await fetch('/api/admin/aliases', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ alias, ticker, name })
+            });
+            if (res.ok) {
+                $('newAlias').value = '';
+                $('newTicker').value = '';
+                $('newName').value = '';
+                refreshAliasTable();
+            }
+        } catch (e) {
+            console.error('[InvestPro] Error saving alias:', e);
+            alert('儲存失敗，請檢查網路連接。');
+        }
+    };
+
     // ── Initial Load ──
     updateChartSizes();
     loadStock('2330.TW', '台積電');

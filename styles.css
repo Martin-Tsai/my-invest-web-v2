@@ -275,3 +275,110 @@ body { background-color: var(--bg-color); color: var(--text-primary); line-heigh
     z-index: 1000;
     pointer-events: none;
 }
+
+/* ── ADMIN & MODAL STYLES ── */
+.admin-toggle-btn {
+    background: var(--card-bg);
+    border: 1px solid var(--border-color);
+    color: var(--text-secondary);
+    border-radius: 8px;
+    padding: 0 12px;
+    font-size: 1.2rem;
+    cursor: pointer;
+    transition: var(--transition);
+}
+.admin-toggle-btn:hover {
+    border-color: var(--accent);
+    color: var(--text-primary);
+}
+
+.modal-overlay {
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(0,0,0,0.85);
+    backdrop-filter: blur(8px);
+    display: none; /* hidden by default */
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+    padding: 20px;
+}
+.modal-overlay.active { display: flex; }
+
+.modal-content {
+    background: var(--card-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 16px;
+    width: 100%;
+    max-width: 600px;
+    max-height: 90vh;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 24px 64px rgba(0,0,0,0.8);
+    position: relative;
+    overflow: hidden;
+}
+
+.modal-header {
+    padding: 20px;
+    border-bottom: 1px solid var(--border-color);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+.modal-header h3 { font-size: 1.2rem; font-weight: 700; color: var(--accent); }
+.close-modal {
+    background: none; border: none;
+    color: var(--text-secondary);
+    font-size: 1.8rem; cursor: pointer;
+    line-height: 1;
+}
+
+.modal-body { padding: 20px; overflow-y: auto; }
+.mgmt-hint { font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 20px; }
+
+.admin-form {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin-bottom: 24px;
+    background: rgba(255,255,255,0.03);
+    padding: 16px;
+    border-radius: 12px;
+    border: 1px dashed var(--border-color);
+}
+.admin-form input {
+    background: var(--bg-color);
+    border: 1px solid var(--border-color);
+    color: var(--text-primary);
+    padding: 10px;
+    border-radius: 6px;
+    font-size: 0.9rem;
+}
+.admin-form .btn-primary {
+    grid-column: span 2;
+    background: var(--accent);
+    color: white;
+    border: none;
+    padding: 12px;
+    border-radius: 6px;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.admin-table-container { border-radius: 8px; border: 1px solid var(--border-color); overflow: hidden; }
+.admin-table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
+.admin-table th { background: #1c2128; color: var(--text-secondary); text-align: left; padding: 12px; font-weight: 600; }
+.admin-table td { padding: 12px; border-top: 1px solid var(--border-color); color: var(--text-primary); }
+.admin-table tr:hover { background: rgba(255,255,255,0.02); }
+
+.btn-delete {
+    background: var(--sell-bg);
+    color: var(--sell-color);
+    border: 1px solid rgba(255,51,102,0.3);
+    padding: 4px 8px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 0.75rem;
+}
+.btn-delete:hover { background: var(--sell-color); color: white; }

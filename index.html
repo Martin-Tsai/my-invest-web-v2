@@ -26,6 +26,7 @@
                     <span class="search-icon-css">🔍</span>
                     <input type="text" id="searchInput" placeholder="搜尋代碼或名稱 (例如：2330, 台積電, AAPL)" autocomplete="off">
                     <button id="searchBtn">查詢</button>
+                    <button id="adminBtn" class="admin-toggle-btn" title="管理別名字典">⚙️</button>
                     <div id="searchSuggestions" class="suggestions-dropdown"></div>
                 </div>
             </div>
@@ -163,6 +164,42 @@
             </div>
         </section>
     </main>
+    
+    <!-- Alias Management Modal -->
+    <div id="adminModal" class="modal-overlay">
+        <div class="modal-content admin-panel">
+            <div class="modal-header">
+                <h3>⚙️ 系統核心別名字典管理</h3>
+                <button class="close-modal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <p class="mgmt-hint">在這裡您可以手動將「中文名稱」對應到「代碼」(例如：三菱重工 -> 7011.T)。</p>
+                
+                <div class="admin-form">
+                    <input type="text" id="newAlias" placeholder="中文別名 (如: 三菱重工)">
+                    <input type="text" id="newTicker" placeholder="代碼 (如: 7011.T)">
+                    <input type="text" id="newName" placeholder="顯示名稱 (如: 三菱重工)">
+                    <button id="saveAliasBtn" class="btn-primary">新增 / 修改</button>
+                </div>
+
+                <div class="admin-table-container">
+                    <table class="admin-table">
+                        <thead>
+                            <tr>
+                                <th>別名 (Alias)</th>
+                                <th>代碼 (Ticker)</th>
+                                <th>顯示名稱 (Name)</th>
+                                <th>操作</th>
+                            </tr>
+                        </thead>
+                        <tbody id="aliasTableBody">
+                            <!-- dynamic content -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
 
     <script src="/static/app.js"></script>
     <script>
