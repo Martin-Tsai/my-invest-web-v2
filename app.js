@@ -88,16 +88,25 @@ document.addEventListener('DOMContentLoaded', () => {
     // ── Main Data Loader ──
     async function loadStock(ticker, name = null) {
         console.log('[InvestPro] Loading ticker:', ticker, 'Name:', name);
-        suggestionsEl.style.display = 'none';
+        if (suggestionsEl) suggestionsEl.style.display = 'none';
         // Clear old data immediately
-        $('ui-ticker').innerText = '載入中...';
-        $('ui-price').innerText = '-';
-        $('ui-change').innerText = '';
-        $('ui-score').innerText = '-';
-        $('ui-score-card').style.border = '1px solid #444';
+        const tickerEl = $('ui-ticker');
+        const priceEl = $('ui-price');
+        const changeEl = $('ui-change');
+        const scoreEl = $('ui-composite-score');
+        const scoreBox = $('ui-score-box');
+        const searchBtn = $('searchBtn');
+
+        if (tickerEl) tickerEl.innerText = '載入中...';
+        if (priceEl) priceEl.innerText = '-';
+        if (changeEl) changeEl.innerText = '';
+        if (scoreEl) scoreEl.innerText = '-';
+        if (scoreBox) scoreBox.style.border = '1px solid #444';
         
-        $('searchBtn').disabled = true;
-        $('searchBtn').innerText = '⏳';
+        if (searchBtn) {
+            searchBtn.disabled = true;
+            searchBtn.innerText = '⏳';
+        }
 
         // ── Cold Start / Timeout Timer ──
         const coldStartTimer = setTimeout(() => {
@@ -115,6 +124,14 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (res.status === 429) throw new Error('RATE_LIMIT');
                 throw new Error('HTTP ' + res.status);
             }
+
+            const contentType = res.headers.get("content-type");
+            if (!contentType || !contentType.includes("application/json")) {
+                const text = await res.text();
+                console.error('[InvestPro] Non-JSON response:', text.substring(0, 100));
+                throw new Error('SERVER_ERROR');
+            }
+
             const data = await res.json();
             console.log('[InvestPro] Got', data.candles.length, 'candles');
 
@@ -206,11 +223,18 @@ document.addEventListener('DOMContentLoaded', () => {
 
         } catch (error) {
             console.error('[InvestPro] Error:', error);
-            $('ui-ticker').innerText = '❌ 載入失敗';
-            if (error.message === 'RATE_LIMIT') {
-                $('ui-action').innerText = '請求過於頻繁 (429)，Yahoo Finance 目前暫時限制存取，請於一分鐘後重試。';
-            } else {
-                $('ui-action').innerText = '載入失敗。伺服器目前繁忙或代碼無效，請稍後再試。';
+            const tickerEl = $('ui-ticker');
+            const actionEl = $('ui-action');
+            if (tickerEl) tickerEl.innerText = '❌ 載入失敗';
+            
+            if (actionEl) {
+                if (error.message === 'RATE_LIMIT') {
+                    actionEl.innerText = '請求過於頻繁 (429)，Yahoo Finance 目前暫時限制存取，請於一分鐘後重試。';
+                } else if (error.message === 'SERVER_ERROR') {
+                    actionEl.innerText = '伺服器目前無法正常回應 (502/503)，可能正在維護或 Yahoo Finance 暫時斷線。';
+                } else {
+                    actionEl.innerText = `載入失敗 (${error.message})。伺服器目前繁忙或代碼無效，請稍後再試。`;
+                }
             }
         } finally {
             $('searchBtn').disabled = false;
@@ -235,6 +259,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
         try {
             const res = await fetch(API_SUGGEST + encodeURIComponent(query));
+            if (!res.ok) return;
+            
+            const contentType = res.headers.get("content-type");
+            if (!contentType || !contentType.includes("application/json")) return;
+
             const data = await res.json();
             const quotes = data.quotes || [];
 

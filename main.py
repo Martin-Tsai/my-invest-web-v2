@@ -38,7 +38,7 @@ STOCK_ALIASES = load_data(ALIASES_FILE, {})
 
 # ── Simple In-Memory Cache ──
 STOCK_CACHE = {} # { ticker: { "data": ..., "expires": ... } }
-CACHE_TTL = 300  # 5 minutes
+CACHE_TTL = 3600  # 1 hour (Reduced frequency to stay below Yahoo limits)
 
 app = FastAPI()
 
@@ -333,19 +333,26 @@ async def search_suggestions(q: str):
     }
     
     try:
-        # Note: In production, consider using httpx (async) but requests is already in requirements.
         resp = requests.get(url, headers=headers, timeout=5)
-        resp.raise_for_status()
+        if resp.status_code != 200:
+            print(f"[Search Engine] Yahoo returned status {resp.status_code}")
+            return {"quotes": []}
+            
+        contentType = resp.headers.get("content-type", "")
+        if "application/json" not in contentType:
+            print(f"[Search Engine] Yahoo returned non-JSON: {contentType}")
+            return {"quotes": []}
+
         data = resp.json()
         
         # Filter and format: [Symbol] Name (Exchange)
         results = []
-        for q in data.get("quotes", []):
-            if q.get("quoteType") in ["EQUITY", "ETF", "INDEX"]:
+        for q_res in data.get("quotes", []):
+            if q_res.get("quoteType") in ["EQUITY", "ETF", "INDEX"]:
                 results.append({
-                    "symbol": q.get("symbol"),
-                    "name": q.get("shortname") or q.get("longname") or "",
-                    "exchDisp": q.get("exchDisp") or q.get("exchange") or "",
+                    "symbol": q_res.get("symbol"),
+                    "name": q_res.get("shortname") or q_res.get("longname") or "",
+                    "exchDisp": q_res.get("exchDisp") or q_res.get("exchange") or "",
                 })
         return {"quotes": results}
         
