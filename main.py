@@ -285,26 +285,26 @@ def build_strategy(price, ma5, ma20, ma60, rsi, k, d, support, resistance, granv
 
     # ── Generate action recommendations ──
     if signal_type == "buy" and score >= 3:
-        action = "可以考慮分批佈局，趨勢偏多。"
-        timing = "技術面偏強，可逢回找買點。"
+        action = "可以考慮分批佈局，趨勢多頭勝算高。"
+        timing = "技術面強勁向上，可逢回找買點。"
         holder = "繼續持有，設好停利點。"
-        overall = "偏強"
+        overall = "多頭強勁"
     elif signal_type == "buy" and score >= 0:
         action = "可小量試單，但需留意風險。"
         timing = "尚可，但建議配合量能觀察。"
         holder = "持股續抱，但注意均線是否轉弱。"
-        overall = "中性偏多"
+        overall = "多頭初顯"
     elif signal_type == "sell" and score <= -3:
         action = "暫時不要新買，先保守。"
         timing = "現在不是好的進場點。"
         holder = "若已持有，先觀察支撐是否守住，跌破可考慮減碼。"
-        overall = "偏弱"
+        overall = "空頭顯著"
         risks.append("多項指標轉弱，建議提高警覺")
     else:
         action = "觀望為主，等待方向明朗。"
         timing = "尚未出現明確進場訊號。"
         holder = "持股者可暫時持有，但設好停損。"
-        overall = "中性偏弱"
+        overall = "觀望盤整"
 
     return {
         "composite_score": score,
